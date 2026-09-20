@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: june-x-sessions
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        sync: false      # set in Render dashboard (Postgres or Mongo URI)
+      - key: SESSION_PREFIX
+        value: JUNE-X~
+      - key: GC_JID
+        value: FiJ0HpoqKOS0llgeS1uydN
+      - key: BOT_REPO
+        value: https://github.com/eminentboy11/velvet-sparrow-sessions
+      - key: WA_CHANNEL
+        value: https://whatsapp.com/channel/0029VbBzXBN2kNFoxm7LiG3Q
+      - key: MSG_FOOTER
+        value: "> *JUNE X SESSIONS*"

@@ -1,9 +1,9 @@
 const { 
-    giftedId,
+    juneId,
     removeFile
-} = require('../gift');
+} = require('../store');
 const { SESSION_PREFIX, GC_JID, BOT_REPO, WA_CHANNEL, MSG_FOOTER } = require('../config');
-const { isConfigured, saveSession } = require('../gift/sessionStore');
+const { isConfigured, saveSession } = require('../store/sessionStore');
 const QRCode = require('qrcode');
 const express = require('express');
 const zlib = require('zlib');
@@ -13,7 +13,7 @@ let router = express.Router();
 const pino = require("pino");
 const { sendButtons } = require('gifted-btns');
 const {
-    default: giftedConnect,
+    default: juneConnect,
     useMultiFileAuthState,
     Browsers,
     delay,
@@ -23,7 +23,7 @@ const {
 const sessionDir = path.join(__dirname, "session");
 
 router.get('/session', async (req, res) => {
-    const id = giftedId();
+    const id = juneId();
     const sessionType = (req.query.type || 'short').toLowerCase();
     let responseSent = false;
     let sessionCleanedUp = false;
@@ -35,12 +35,12 @@ router.get('/session', async (req, res) => {
         }
     }
 
-    async function GIFTED_QR_CODE() {
+    async function JUNE_QR() {
         const { version } = await fetchLatestBaileysVersion();
         console.log(version);
         const { state, saveCreds } = await useMultiFileAuthState(path.join(sessionDir, id));
         try {
-            let Gifted = giftedConnect({
+            let bot = juneConnect({
                 version,
                 auth: state,
                 printQRInTerminal: false,
@@ -50,8 +50,8 @@ router.get('/session', async (req, res) => {
                 keepAliveIntervalMs: 30000
             });
 
-            Gifted.ev.on('creds.update', saveCreds);
-            Gifted.ev.on("connection.update", async (s) => {
+            bot.ev.on('creds.update', saveCreds);
+            bot.ev.on("connection.update", async (s) => {
                 const { connection, lastDisconnect, qr } = s;
 
                 if (qr && !responseSent) {
@@ -198,7 +198,7 @@ router.get('/session', async (req, res) => {
 
                 if (connection === "open") {
                     try {
-                        await Gifted.groupAcceptInvite(GC_JID);
+                        await bot.groupAcceptInvite(GC_JID);
                     } catch (e) {
                         console.log("Group join error:", e.message);
                     }
@@ -257,7 +257,7 @@ router.get('/session', async (req, res) => {
                             ];
                         }
 
-                        await sendButtons(Gifted, Gifted.user.id, {
+                        await sendButtons(bot, bot.user.id, {
                             title: '',
                             text: msgText,
                             footer: MSG_FOOTER,
@@ -265,7 +265,7 @@ router.get('/session', async (req, res) => {
                         });
 
                         await delay(2000);
-                        await Gifted.ws.close();
+                        await bot.ws.close();
                     } catch (sendError) {
                         console.error("Error sending session:", sendError);
                     } finally {
@@ -274,7 +274,7 @@ router.get('/session', async (req, res) => {
 
                 } else if (connection === "close" && lastDisconnect && lastDisconnect.error && lastDisconnect.error.output?.statusCode != 401) {
                     await delay(10000);
-                    GIFTED_QR_CODE();
+                    JUNE_QR();
                 }
             });
         } catch (err) {
@@ -288,7 +288,7 @@ router.get('/session', async (req, res) => {
     }
 
     try {
-        await GIFTED_QR_CODE();
+        await JUNE_QR();
     } catch (finalError) {
         console.error("Final error:", finalError);
         await cleanUpSession();

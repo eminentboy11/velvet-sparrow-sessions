@@ -1,9 +1,9 @@
 const { 
-    giftedId,
+    juneId,
     removeFile
-} = require('../gift');
+} = require('../store');
 const { SESSION_PREFIX, GC_JID, BOT_REPO, WA_CHANNEL, MSG_FOOTER } = require('../config');
-const { isConfigured, saveSession } = require('../gift/sessionStore');
+const { isConfigured, saveSession } = require('../store/sessionStore');
 const zlib = require('zlib');
 const express = require('express');
 const fs = require('fs');
@@ -12,7 +12,7 @@ let router = express.Router();
 const pino = require("pino");
 const { sendButtons } = require('gifted-btns');
 const {
-    default: giftedConnect,
+    default: juneConnect,
     useMultiFileAuthState,
     delay,
     fetchLatestBaileysVersion,
@@ -38,7 +38,7 @@ try {
 } catch (_) {}
 
 router.get('/', async (req, res) => {
-    const id = giftedId();
+    const id = juneId();
     let num = (req.query.number || '').replace(/[^0-9]/g, '');
     const sessionType = (req.query.type || 'short').toLowerCase();
     let responseSent = false;
@@ -54,15 +54,15 @@ router.get('/', async (req, res) => {
         }
     }
 
-    async function GIFTED_PAIR_CODE() {
+    async function JUNE_PAIR() {
         const { version } = await fetchLatestBaileysVersion();
         console.log(`[pair:${id}] version:`, version, '| registered:', false);
         const { state, saveCreds } = await useMultiFileAuthState(path.join(sessionDir, id));
 
-        let Gifted;
+        let bot;
         try {
             const pinoLogger = pino({ level: "fatal" }).child({ level: "fatal" });
-            Gifted = giftedConnect({
+            bot = juneConnect({
                 version,
                 auth: {
                     creds: state.creds,
@@ -80,7 +80,7 @@ router.get('/', async (req, res) => {
                 keepAliveIntervalMs: 30000
             });
         } catch (err) {
-            console.error(`[pair:${id}] giftedConnect failed:`, err.message);
+            console.error(`[pair:${id}] juneConnect failed:`, err.message);
             if (!responseSent && !res.headersSent) {
                 res.status(500).json({ code: "Service is Currently Unavailable" });
                 responseSent = true;
@@ -90,9 +90,9 @@ router.get('/', async (req, res) => {
         }
 
         // Attach ALL event listeners FIRST before any async work
-        Gifted.ev.on('creds.update', saveCreds);
+        bot.ev.on('creds.update', saveCreds);
 
-        Gifted.ev.on("connection.update", async (s) => {
+        bot.ev.on("connection.update", async (s) => {
             const { connection, lastDisconnect } = s;
             const statusCode = lastDisconnect?.error?.output?.statusCode;
             console.log("[pair:"+id+"] event: "+JSON.stringify(Object.keys(s))+" conn="+connection+" status="+statusCode);
@@ -101,7 +101,7 @@ router.get('/', async (req, res) => {
                 pairingDone = true;
                 console.log(`[pair:${id}] Pairing complete — connection open, saving session`);
                 try {
-                    try { await Gifted.groupAcceptInvite(GC_JID); } catch (_) {}
+                    try { await bot.groupAcceptInvite(GC_JID); } catch (_) {}
 
                     await delay(50000);
 
@@ -148,7 +148,7 @@ router.get('/', async (req, res) => {
                     let sessionSent = false, sendAttempts = 0;
                     while (sendAttempts < 5 && !sessionSent) {
                         try {
-                            await sendButtons(Gifted, Gifted.user.id, {
+                            await sendButtons(bot, bot.user.id, {
                                 title: '', text: msgText, footer: MSG_FOOTER, buttons: msgButtons
                             });
                             sessionSent = true;
@@ -161,7 +161,7 @@ router.get('/', async (req, res) => {
                     }
 
                     await delay(3000);
-                    try { await Gifted.ws.close(); } catch (_) {}
+                    try { await bot.ws.close(); } catch (_) {}
                 } catch (sessionError) {
                     console.error(`[pair:${id}] Session processing error:`, sessionError.message);
                 } finally {
@@ -178,16 +178,16 @@ router.get('/', async (req, res) => {
                 reconnectCount++;
                 console.log(`[pair:${id}] Reconnect #${reconnectCount} in 5s (status ${statusCode})`);
                 await delay(5000);
-                GIFTED_PAIR_CODE();
+                JUNE_PAIR();
             }
         });
 
         // Request pairing code AFTER listeners are attached (avoids missing close events)
-        if (!Gifted.authState.creds.registered) {
+        if (!bot.authState.creds.registered) {
             await delay(2000); // brief wait for WS to establish
             console.log(`[pair:${id}] Requesting pairing code for ${num}`);
             try {
-                const code = await Gifted.requestPairingCode(num);
+                const code = await bot.requestPairingCode(num);
                 console.log(`[pair:${id}] Got code: ${code}`);
                 if (!responseSent && !res.headersSent) {
                     res.json({ code: code, fallback: sessionType === 'short' && !isConfigured() });
@@ -207,7 +207,7 @@ router.get('/', async (req, res) => {
     }
 
     try {
-        await GIFTED_PAIR_CODE();
+        await JUNE_PAIR();
     } catch (finalError) {
         console.error(`[pair:${id}] Final error:`, finalError.message);
         await cleanUpSession();

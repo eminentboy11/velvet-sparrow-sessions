@@ -1,6 +1,6 @@
 const fs = require('fs');
 
-function giftedId(num = 4) {
+function juneId(num = 4) {
     let result = "";
     const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
     for (let i = 0; i < num; i++) {
@@ -24,10 +24,10 @@ async function removeFile(FilePath) {
     return true;
 }
 
-const safeGroupAcceptInvite = async (Gifted, groupJid) => {
+const safeGroupAcceptInvite = async (bot, groupJid) => {
     if (!groupJid) return false;
     try {
-        await Gifted.groupAcceptInvite(groupJid);
+        await bot.groupAcceptInvite(groupJid);
         return true;
     } catch (error) {
         switch (error.data) {
@@ -40,4 +40,4 @@ const safeGroupAcceptInvite = async (Gifted, groupJid) => {
     }
 };
 
-module.exports = { giftedId, removeFile, generateRandomCode, safeGroupAcceptInvite };
+module.exports = { juneId, removeFile, generateRandomCode, safeGroupAcceptInvite };

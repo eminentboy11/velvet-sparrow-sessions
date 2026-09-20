@@ -4,7 +4,7 @@ const bodyParser = require("body-parser");
 const config = require("./config");
 const { PORT } = config;
 const { qrRoute, pairRoute } = require("./routes");
-const { init, isConfigured, getSession } = require("./gift/sessionStore");
+const { init, isConfigured, getSession } = require("./store/sessionStore");
 const app = express();
 app.set("json spaces", 2);
 

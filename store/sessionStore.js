@@ -29,7 +29,7 @@ async function init(config) {
                 data: { type: String, required: true },
                 createdAt: { type: Date, default: Date.now }
             });
-            mongoModel = mongoose.models.GiftedSession || mongoose.model('GiftedSession', sessionSchema);
+            mongoModel = mongoose.models.JuneSession || mongoose.model('JuneSession', sessionSchema);
             storageBackend = 'mongodb';
             console.log('Session storage: MongoDB connected');
         } catch (e) {
@@ -40,7 +40,7 @@ async function init(config) {
             const { Pool } = require('pg');
             pgPool = new Pool({ connectionString: config.DATABASE_URL, ssl: { rejectUnauthorized: false } });
             await pgPool.query(`
-                CREATE TABLE IF NOT EXISTS gifted_sessions (
+                CREATE TABLE IF NOT EXISTS june_sessions (
                     short_id VARCHAR(20) PRIMARY KEY,
                     data TEXT NOT NULL,
                     created_at TIMESTAMP DEFAULT NOW()
@@ -67,7 +67,7 @@ async function saveSession(fullSessionString) {
         await mongoModel.create({ shortId, data: fullSessionString });
     } else if (storageBackend === 'postgresql') {
         await pgPool.query(
-            'INSERT INTO gifted_sessions (short_id, data) VALUES ($1, $2)',
+            'INSERT INTO june_sessions (short_id, data) VALUES ($1, $2)',
             [shortId, fullSessionString]
         );
     }
@@ -83,7 +83,7 @@ async function getSession(id) {
         return doc ? doc.data : null;
     } else if (storageBackend === 'postgresql') {
         const result = await pgPool.query(
-            'SELECT data FROM gifted_sessions WHERE short_id = $1',
+            'SELECT data FROM june_sessions WHERE short_id = $1',
             [safeId]
         );
         return result.rows[0] ? result.rows[0].data : null;
