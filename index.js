@@ -12,25 +12,31 @@ require("events").EventEmitter.defaultMaxListeners = 2000;
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, "public")));
+app.use(express.static(path.join(__dirname, "public"), { index: false }));
 
-app.get("/pair", (req, res) => {
-    res.sendFile(path.join(__dirname, "public", "pair.html"), { dotfiles: "allow" }, (err) => {
-        if (err) res.status(500).send("Error serving page: " + err.message);
-    });
-});
+// Pages are static files with __BOT_REPO__ placeholders, injected at request
+// time so the "Source" link always follows the BOT_REPO env var (cached per value).
+const pageCache = new Map();
+function sendPage(name) {
+    return (req, res) => {
+        try {
+            const repo = config.BOT_REPO;
+            const key = name + "|" + repo;
+            if (!pageCache.has(key)) {
+                pageCache.set(key, require("fs")
+                    .readFileSync(path.join(__dirname, "public", name), "utf8")
+                    .split("__BOT_REPO__").join(repo));
+            }
+            res.type("html").send(pageCache.get(key));
+        } catch (err) {
+            res.status(500).send("Error serving page: " + err.message);
+        }
+    };
+}
 
-app.get("/", (req, res) => {
-    res.sendFile(path.join(__dirname, "public", "index.html"), { dotfiles: "allow" }, (err) => {
-        if (err) res.status(500).send("Error serving page: " + err.message);
-    });
-});
-
-app.get("/qr", (req, res) => {
-    res.sendFile(path.join(__dirname, "public", "qr.html"), { dotfiles: "allow" }, (err) => {
-        if (err) res.status(500).send("Error serving page: " + err.message);
-    });
-});
+app.get("/pair", sendPage("pair.html"));
+app.get("/", sendPage("index.html"));
+app.get("/qr", sendPage("qr.html"));
 app.use("/qr", qrRoute);
 app.use("/code", pairRoute);
 
