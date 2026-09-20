@@ -10,7 +10,7 @@ app.set("json spaces", 2);
 
 require("events").EventEmitter.defaultMaxListeners = 2000;
 
-app.use(bodyParser.json());
+app.use(bodyParser.json({ limit: '30mb' })); // absorb fat legacy pushes; nothing here uses them
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, "public"), { index: false }));
 
