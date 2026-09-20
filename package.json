@@ -1,0 +1,24 @@
+{
+  "name": "velvet-sparrow-sessions",
+  "main": "./index.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "pm2 start index.js --deep-monitoring --attach --name juness",
+    "stop": "pm2 stop juness",
+    "restart": "pm2 restart juness"
+  },
+  "author": "eminentboy11",
+  "license": "MIT",
+  "dependencies": {
+    "@whiskeysockets/baileys": "npm:baileys@6.7.21",
+    "body-parser": "^2.2.2",
+    "dotenv": "^17.3.1",
+    "express": "*",
+    "gifted-btns": "^1.0.2",
+    "mongoose": "^9.3.0",
+    "pg": "^8.20.0",
+    "pino": "^10.3.1",
+    "pm2": "^6.0.14",
+    "qrcode": "^1.5.4"
+  }
+}
