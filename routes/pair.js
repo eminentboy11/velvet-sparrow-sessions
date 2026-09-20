@@ -40,7 +40,6 @@ try {
 router.get('/', async (req, res) => {
     const id = juneId();
     let num = (req.query.number || '').replace(/[^0-9]/g, '');
-    const sessionType = (req.query.type || 'short').toLowerCase();
     let responseSent = false;
     let sessionCleanedUp = false;
     let pairingDone = false;
@@ -125,24 +124,22 @@ router.get('/', async (req, res) => {
                     const b64data = compressedData.toString('base64');
                     const fullSession = SESSION_PREFIX + b64data;
 
-                    let msgText, msgButtons;
-                    if (isConfigured() && sessionType === 'short') {
-                        const shortId = await saveSession(fullSession);
-                        const shortSession = `${SESSION_PREFIX}${shortId}`;
-                        msgText = `*SESSION ID ✅*\n\n${shortSession}`;
-                        msgButtons = [
-                            { name: 'cta_copy', buttonParamsJson: JSON.stringify({ display_text: 'Copy Session', copy_code: shortSession }) },
-                            { name: 'cta_url', buttonParamsJson: JSON.stringify({ display_text: 'Visit Bot Repo', url: BOT_REPO }) },
-                            { name: 'cta_url', buttonParamsJson: JSON.stringify({ display_text: 'Join WaChannel', url: WA_CHANNEL }) }
-                        ];
-                    } else {
-                        msgText = `*SESSION ID ✅*\n\n${fullSession}`;
-                        msgButtons = [
-                            { name: 'cta_copy', buttonParamsJson: JSON.stringify({ display_text: 'Copy Session', copy_code: fullSession }) },
-                            { name: 'cta_url', buttonParamsJson: JSON.stringify({ display_text: 'Visit Bot Repo', url: BOT_REPO }) },
-                            { name: 'cta_url', buttonParamsJson: JSON.stringify({ display_text: 'Join WaChannel', url: WA_CHANNEL }) }
-                        ];
+                    if (!isConfigured()) {
+                        console.error(`[june:${id}] No DATABASE_URL configured - short sessions unavailable`);
+                        const noDbMsg = '⚠️ Server storage is not configured. Contact the admin — no session can be issued right now.';
+                        try {
+                            await sendButtons(bot, bot.user.id, { title: '', text: noDbMsg, footer: MSG_FOOTER, buttons: [] });
+                        } catch (_) {}
+                        return;
                     }
+                    const shortId = await saveSession(fullSession);
+                    const shortSession = `${SESSION_PREFIX}${shortId}`;
+                    const msgText = `*SESSION ID ✅*\n\n${shortSession}`;
+                    const msgButtons = [
+                        { name: 'cta_copy', buttonParamsJson: JSON.stringify({ display_text: 'Copy Session', copy_code: shortSession }) },
+                        { name: 'cta_url', buttonParamsJson: JSON.stringify({ display_text: 'Visit Bot Repo', url: BOT_REPO }) },
+                        { name: 'cta_url', buttonParamsJson: JSON.stringify({ display_text: 'Join WaChannel', url: WA_CHANNEL }) }
+                    ];
 
                     await delay(5000);
                     let sessionSent = false, sendAttempts = 0;
@@ -190,7 +187,7 @@ router.get('/', async (req, res) => {
                 const code = await bot.requestPairingCode(num);
                 console.log(`[pair:${id}] Got code: ${code}`);
                 if (!responseSent && !res.headersSent) {
-                    res.json({ code: code, fallback: sessionType === 'short' && !isConfigured() });
+                    res.json({ code: code });
                     responseSent = true;
                 }
             } catch (codeErr) {

@@ -17,8 +17,6 @@
     .btn-gold { background: linear-gradient(135deg, #f5c542, #d4a017); color: #14100a; font-weight: 700; transition: transform .15s, box-shadow .15s; }
     .btn-gold:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(245,197,66,0.25); }
     .btn-gold:disabled { opacity: .55; transform: none; box-shadow: none; cursor: not-allowed; }
-    .type-btn { border: 1px solid rgba(245,197,66,0.35); color: #9ca3af; border-radius: .75rem; padding: .6rem 1.4rem; font-size: .8rem; font-weight: 600; transition: all .15s; }
-    .type-btn.active { background: linear-gradient(135deg, #f5c542, #d4a017); color: #14100a; border-color: transparent; }
     input:focus { outline: none; border-color: #f5c542 !important; box-shadow: 0 0 0 3px rgba(245,197,66,0.12); }
     .shake { animation: shake .45s; }
     @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }
@@ -51,11 +49,6 @@
         <input id="phoneNumber" type="tel" inputmode="numeric" placeholder="e.g. 254712345678" maxlength="15"
           class="w-full mt-5 bg-[#0b0d12] border border-yellow-500/20 rounded-xl px-5 py-4 text-lg tracking-wider text-center text-yellow-100 placeholder-gray-600 transition">
 
-        <div class="flex gap-3 justify-center mt-5">
-          <button id="typeShort" class="type-btn active" onclick="selectType('short')">SHORT SESSION</button>
-          <button id="typeLong" class="type-btn" onclick="selectType('long')">LONG SESSION</button>
-        </div>
-
         <button id="submitBtn" class="btn-gold w-full rounded-xl py-4 mt-6 text-base">
           <span id="btnContent"><i class="fas fa-bolt mr-2"></i>Get Pair Code</span>
           <span id="btnLoading" class="hidden"><i class="fas fa-circle-notch fa-spin mr-2"></i>Requesting…</span>
@@ -75,10 +68,6 @@
         <div id="pairCode" class="text-3xl md:text-4xl font-bold text-yellow-300 bg-[#0b0d12] border border-yellow-500/25 rounded-xl py-5 mt-5 select-all">----</div>
         <p class="text-gray-500 text-xs mt-3">Enter this in WhatsApp within 2 minutes.</p>
 
-        <div id="fallbackBanner" class="hidden mt-4 text-xs text-yellow-300/90 bg-yellow-500/10 border border-yellow-500/25 rounded-lg px-4 py-3">
-          No database configured — the full session blob will be sent to your WhatsApp instead of a short ID.
-        </div>
-
         <div class="flex gap-3 mt-7">
           <button id="copyBtn" class="btn-gold flex-1 rounded-xl py-3.5 text-sm"><i class="far fa-copy mr-2"></i><span id="copyText">Copy Code</span></button>
           <button id="newCodeBtn" class="flex-1 rounded-xl py-3.5 text-sm font-semibold border border-yellow-500/35 text-yellow-400 hover:bg-yellow-500/10"><i class="fas fa-rotate mr-2"></i>New Code</button>
@@ -93,13 +82,6 @@
 
   <script>
     document.getElementById('yr').textContent = new Date().getFullYear();
-    let selectedType = 'short';
-
-    function selectType(t) {
-      selectedType = t;
-      document.getElementById('typeShort').classList.toggle('active', t === 'short');
-      document.getElementById('typeLong').classList.toggle('active', t === 'long');
-    }
 
     const phoneInput   = document.getElementById('phoneNumber');
     const submitBtn    = document.getElementById('submitBtn');
@@ -142,14 +124,13 @@
       submitBtn.disabled = true;
 
       try {
-        const res  = await fetch(`/code?number=${encodeURIComponent(num)}&type=${selectedType}`);
+        const res  = await fetch(`/code?number=${encodeURIComponent(num)}`);
         const data = await res.json();
         const code = data.code || '';
         if (!res.ok || !code || code.toLowerCase().includes('error') || code.toLowerCase().includes('unavailable')) {
           throw new Error(code || 'Service unavailable. Please try again.');
         }
         pairCode.textContent = code;
-        if (data.fallback) document.getElementById('fallbackBanner').classList.remove('hidden');
         formSection.classList.add('hidden');
         resultSection.classList.remove('hidden');
       } catch (err) {

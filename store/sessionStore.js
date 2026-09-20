@@ -5,11 +5,10 @@ let mongoModel = null;
 let pgPool = null;
 
 // Exact-length alphanumeric session ID (a-z A-Z 0-9).
-// Length controlled via SESSION_ID_LENGTH (default 8 → "JUNE-X~" + 8 = 15 chars).
-// Set SESSION_ID_LENGTH=6 for dbapi-style 13-char handles.
+// Length controlled via SESSION_ID_LENGTH (default 6 → "JUNE-X~" + 6 = 13 chars total).
 const SESSION_ID_ALPHABET = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
 function generateShortId() {
-    const length = parseInt(process.env.SESSION_ID_LENGTH, 10) || 8;
+    const length = parseInt(process.env.SESSION_ID_LENGTH, 10) || 6;
     if (length < 4 || length > 20) throw new Error('SESSION_ID_LENGTH must be 4–20');
     let out = '';
     while (out.length < length) {
@@ -66,7 +65,7 @@ async function init(config) {
             console.error('PostgreSQL connection failed:', e.message);
         }
     } else {
-        console.log('Session storage: No DATABASE_URL set — using inline zlib fallback');
+        console.log('Session storage: No DATABASE_URL set — pairing will be REFUSED (short IDs require a database)');
     }
 }
 

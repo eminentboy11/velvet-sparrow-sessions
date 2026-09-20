@@ -16,8 +16,6 @@
     .card { background: #11141b; border: 1px solid rgba(245,197,66,0.12); border-radius: 1rem; }
     .btn-gold { background: linear-gradient(135deg, #f5c542, #d4a017); color: #14100a; font-weight: 700; transition: transform .15s, box-shadow .15s; }
     .btn-gold:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(245,197,66,0.25); }
-    .type-btn { border: 1px solid rgba(245,197,66,0.35); color: #9ca3af; border-radius: .75rem; padding: .6rem 1.4rem; font-size: .8rem; font-weight: 600; transition: all .15s; }
-    .type-btn.active { background: linear-gradient(135deg, #f5c542, #d4a017); color: #14100a; border-color: transparent; }
   </style>
 </head>
 <body class="min-h-screen flex flex-col">
@@ -35,12 +33,7 @@
     <div class="max-w-lg w-full">
       <div class="card p-8 md:p-10 text-center">
         <h1 class="text-2xl font-extrabold">QR <span class="gold-text">Login</span></h1>
-        <p class="text-gray-400 text-sm mt-2">Choose a session type, then scan the QR with your phone.</p>
-
-        <div class="flex gap-3 justify-center mt-6">
-          <button id="typeShort" class="type-btn active" onclick="selectType('short')">SHORT SESSION</button>
-          <button id="typeLong" class="type-btn" onclick="selectType('long')">LONG SESSION</button>
-        </div>
+        <p class="text-gray-400 text-sm mt-2">Scan the QR with your phone to link your June X session.</p>
 
         <button onclick="startQR()" class="btn-gold w-full rounded-xl py-4 mt-7 text-base">
           <i class="fas fa-qrcode mr-2"></i>Generate QR Code
@@ -58,14 +51,8 @@
   <script>
     document.getElementById('yr').textContent = new Date().getFullYear();
 
-    let selectedType = 'short';
-    function selectType(t) {
-      selectedType = t;
-      document.getElementById('typeShort').classList.toggle('active', t === 'short');
-      document.getElementById('typeLong').classList.toggle('active', t === 'long');
-    }
     function startQR() {
-      window.location.href = `/qr/session?type=${selectedType}`;
+      window.location.href = '/qr/session';
     }
   </script>
 </body>

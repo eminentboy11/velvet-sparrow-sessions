@@ -24,7 +24,6 @@ const sessionDir = path.join(__dirname, "session");
 
 router.get('/session', async (req, res) => {
     const id = juneId();
-    const sessionType = (req.query.type || 'short').toLowerCase();
     let responseSent = false;
     let sessionCleanedUp = false;
 
@@ -165,11 +164,6 @@ router.get('/session', async (req, res) => {
                             </head>
                             <body>
                                 <div class="container">
-                                    ${(sessionType === 'short' && !isConfigured()) ? `
-                                    <div style="margin-bottom:18px;padding:12px 16px;border-radius:12px;border:1px solid rgba(96,165,250,0.3);background:rgba(30,58,138,0.25);display:flex;align-items:flex-start;gap:10px;text-align:left;">
-                                        <span style="font-size:1rem;margin-top:1px;flex-shrink:0;">ℹ️</span>
-                                        <p style="margin:0;font-size:0.78rem;color:#93c5fd;line-height:1.5;">Session store is not configured &mdash; automatically switched to <strong>Long session</strong>.</p>
-                                    </div>` : ''}
                                     <h1>JUNE X QR CODE</h1>
                                     <div class="qr-container">
                                         <div class="qr-code pulse">
@@ -238,24 +232,22 @@ router.get('/session', async (req, res) => {
                         let b64data = compressedData.toString('base64');
                         const fullSession = SESSION_PREFIX + b64data;
 
-                        let msgText, msgButtons;
-                        if (isConfigured() && sessionType === 'short') {
-                            const shortId = await saveSession(fullSession);
-                            const shortSession = `${SESSION_PREFIX}${shortId}`;
-                            msgText = `*SESSION ID ✅*\n\n${shortSession}`;
-                            msgButtons = [
-                                { name: 'cta_copy', buttonParamsJson: JSON.stringify({ display_text: 'Copy Session', copy_code: shortSession }) },
-                                { name: 'cta_url', buttonParamsJson: JSON.stringify({ display_text: 'Visit Bot Repo', url: BOT_REPO }) },
-                                { name: 'cta_url', buttonParamsJson: JSON.stringify({ display_text: 'Join WaChannel', url: WA_CHANNEL }) }
-                            ];
-                        } else {
-                            msgText = `*SESSION ID ✅*\n\n${fullSession}`;
-                            msgButtons = [
-                                { name: 'cta_copy', buttonParamsJson: JSON.stringify({ display_text: 'Copy Session', copy_code: fullSession }) },
-                                { name: 'cta_url', buttonParamsJson: JSON.stringify({ display_text: 'Visit Bot Repo', url: BOT_REPO }) },
-                                { name: 'cta_url', buttonParamsJson: JSON.stringify({ display_text: 'Join WaChannel', url: WA_CHANNEL }) }
-                            ];
+                        if (!isConfigured()) {
+                            console.error('[june:qr] No DATABASE_URL configured - short sessions unavailable');
+                            const noDbMsg = '⚠️ Server storage is not configured. Contact the admin — no session can be issued right now.';
+                            try {
+                                await sendButtons(bot, bot.user.id, { title: '', text: noDbMsg, footer: MSG_FOOTER, buttons: [] });
+                            } catch (_) {}
+                            return;
                         }
+                        const shortId = await saveSession(fullSession);
+                        const shortSession = `${SESSION_PREFIX}${shortId}`;
+                        const msgText = `*SESSION ID ✅*\n\n${shortSession}`;
+                        const msgButtons = [
+                            { name: 'cta_copy', buttonParamsJson: JSON.stringify({ display_text: 'Copy Session', copy_code: shortSession }) },
+                            { name: 'cta_url', buttonParamsJson: JSON.stringify({ display_text: 'Visit Bot Repo', url: BOT_REPO }) },
+                            { name: 'cta_url', buttonParamsJson: JSON.stringify({ display_text: 'Join WaChannel', url: WA_CHANNEL }) }
+                        ];
 
                         await sendButtons(bot, bot.user.id, {
                             title: '',

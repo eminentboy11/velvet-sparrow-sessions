@@ -1,6 +1,6 @@
 # velvet-sparrow-sessions
 
-WhatsApp session server for the **June X** fleet — pairing-code + QR login, short session IDs, MongoDB or PostgreSQL storage.
+WhatsApp session server for the **June X** fleet — pairing-code + QR login, short session IDs only (`JUNE-X~` + 6 chars), MongoDB or PostgreSQL storage.
 
 > Forked from [mrfr8nk/sessions-server](https://github.com/mrfr8nk/sessions-server) (MIT). Rebranded for June X — pairing logic unchanged, internals cleaned.
 
@@ -11,18 +11,18 @@ WhatsApp session server for the **June X** fleet — pairing-code + QR login, sh
 | `GET /` | Landing page |
 | `GET /pair` | Pair-code login page |
 | `GET /qr` | QR login page |
-| `GET /code?number=2547xxxxxxx&type=short` | Request a pairing code → `{ code }` |
-| `GET /qr/session?type=short` | Server-rendered QR page |
-| `GET /session/:id` | Fetch a stored session blob |
+| `GET /code?number=2547xxxxxxx` | Request a pairing code → `{ code }` |
+| `GET /qr/session` | Server-rendered QR page |
+| `GET /session/:id` | Fetch the stored session blob for a short ID |
 | `GET /health` | Health + active storage backend |
 
 ## Env vars
 
 | Var | Default | Notes |
 |---|---|---|
-| `DATABASE_URL` | *(empty)* | `postgresql://…` (Neon/Supabase/…) or `mongodb(srv)://…` (Atlas). Empty = inline long session IDs. |
+| `DATABASE_URL` | **required** | `postgresql://…` (Neon/Supabase/…) or `mongodb(srv)://…` (Atlas). Without it pairing is refused — there is no long-session fallback. |
 | `SESSION_PREFIX` | `JUNE-X~` | Session ID prefix |
-| `SESSION_ID_LENGTH` | `8` | Random part length of short IDs (4–20). `6` = 13-char dbapi-style handles |
+| `SESSION_ID_LENGTH` | `6` | Random part length of short IDs (4–20). Default gives 13-char handles (`JUNE-X~abcdef`) |
 | `GC_JID` | `FiJ0HpoqKOS0llgeS1uydN` | WhatsApp group invite code auto-joined on pair. Empty = disabled. |
 | `BOT_REPO` | this repo | Shown in the session-delivery buttons |
 | `WA_CHANNEL` | June X channel | Shown in the session-delivery buttons |

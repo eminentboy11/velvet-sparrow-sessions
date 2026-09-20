@@ -20,4 +20,4 @@ services:
       - key: MSG_FOOTER
         value: "> *JUNE X SESSIONS*"
       - key: SESSION_ID_LENGTH
-        value: "8"
+        value: "6"
