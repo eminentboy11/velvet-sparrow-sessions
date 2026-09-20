@@ -89,7 +89,14 @@ async function saveSession(fullSessionString) {
 }
 
 async function getSession(id) {
-    const safeId = id.replace(/[^a-zA-Z0-9]/g, '');
+    // Accept a bare id or any prefixed handle ("JUNE-X~abc", "JUNE~abc", …).
+    // The prefix is decorative: drop everything up to the first '~', then keep
+    // only alphanumerics. (Never just strip symbols — that would leave the
+    // prefix letters glued to the id and break the lookup.)
+    let raw = String(id || '');
+    const tilde = raw.indexOf('~');
+    if (tilde >= 0) raw = raw.slice(tilde + 1);
+    const safeId = raw.replace(/[^a-zA-Z0-9]/g, '');
 
     if (storageBackend === 'mongodb') {
         const doc = await mongoModel.findOne({ shortId: safeId });
