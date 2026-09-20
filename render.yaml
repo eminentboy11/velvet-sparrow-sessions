@@ -21,3 +21,7 @@ services:
         value: "> *JUNE X SESSIONS*"
       - key: SESSION_ID_LENGTH
         value: "6"
+      - key: INTAKE_URL
+        sync: false   # optional: https://your-dbapi/v1/intake/session
+      - key: INTAKE_KEY
+        sync: false   # optional: the dbapi JUNE_INTAKE_KEY

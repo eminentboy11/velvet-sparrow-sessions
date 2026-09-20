@@ -9,6 +9,7 @@
   },
   "author": "eminentboy11",
   "license": "MIT",
+  "engines": { "node": ">=18" },
   "dependencies": {
     "@whiskeysockets/baileys": "npm:baileys@6.7.21",
     "body-parser": "^2.2.2",
