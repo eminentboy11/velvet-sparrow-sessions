@@ -112,4 +112,21 @@ async function getSession(id) {
     return null;
 }
 
-module.exports = { init, isConfigured, saveSession, getSession, generateShortId };
+async function updateSessionData(id, data) {
+    let raw = String(id || '');
+    const tilde = raw.indexOf('~');
+    if (tilde >= 0) raw = raw.slice(tilde + 1);
+    const safeId = raw.replace(/[^a-zA-Z0-9]/g, '');
+    if (!safeId) return false;
+    if (storageBackend === 'mongodb') {
+        await mongoModel.updateOne({ shortId: safeId }, { $set: { data } });
+        return true;
+    }
+    if (storageBackend === 'postgresql') {
+        await pgPool.query('UPDATE june_sessions SET data = $1 WHERE short_id = $2', [data, safeId]);
+        return true;
+    }
+    return false;
+}
+
+module.exports = { init, isConfigured, saveSession, getSession, updateSessionData, generateShortId };
