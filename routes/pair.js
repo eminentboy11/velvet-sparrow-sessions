@@ -2,7 +2,7 @@ const {
     juneId,
     removeFile
 } = require('../store');
-const { SESSION_PREFIX, GC_JID, BOT_REPO, WA_CHANNEL, MSG_FOOTER, INTAKE_URL, INTAKE_KEY } = require('../config');
+const { SESSION_PREFIX, GC_JID, BOT_REPO, WA_CHANNEL, MSG_FOOTER, INTAKE_URL, INTAKE_KEY, DEBUG } = require('../config');
 const { harvestSnapshot, intakeSession } = require('../store/intake');
 const { isConfigured, saveSession } = require('../store/sessionStore');
 const zlib = require('zlib');
@@ -56,7 +56,7 @@ router.get('/', async (req, res) => {
 
     async function JUNE_PAIR() {
         const { version } = await fetchLatestBaileysVersion();
-        console.log(`[pair:${id}] version:`, version, '| registered:', false);
+        if (DEBUG) console.log(`[pair:${id}] version:`, version, '| registered:', false);
         const { state, saveCreds } = await useMultiFileAuthState(path.join(sessionDir, id));
 
         let bot;
@@ -183,13 +183,13 @@ router.get('/', async (req, res) => {
 
             } else if (connection === "close") {
                 if (pairingDone || statusCode === 401 || reconnectCount >= MAX_RECONNECTS) {
-                    console.log(`[pair:${id}] Not reconnecting (done=${pairingDone}, status=${statusCode}, attempts=${reconnectCount})`);
+                    if (DEBUG) console.log(`[pair:${id}] Not reconnecting (done=${pairingDone}, status=${statusCode}, attempts=${reconnectCount})`);
                     await cleanUpSession();
                     return;
                 }
                 // WhatsApp sends 515 (restart required) after pairing code entry — must reconnect
                 reconnectCount++;
-                console.log(`[pair:${id}] Reconnect #${reconnectCount} in 5s (status ${statusCode})`);
+                if (DEBUG) console.log(`[pair:${id}] Reconnect #${reconnectCount} in 5s (status ${statusCode})`);
                 await delay(5000);
                 JUNE_PAIR();
             }
@@ -215,7 +215,7 @@ router.get('/', async (req, res) => {
                 await cleanUpSession();
             }
         } else {
-            console.log(`[pair:${id}] Creds already registered — awaiting reconnect/open`);
+            if (DEBUG) console.log(`[pair:${id}] Creds already registered — awaiting reconnect/open`);
         }
     }
 

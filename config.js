@@ -2,6 +2,8 @@ require('dotenv').config();
 
 module.exports = {
     PORT: process.env.PORT || 50900,
+    // set DEBUG=true for full per-event pairing logs (default: quiet)
+    DEBUG: /^(1|true|yes|on)$/i.test(String(process.env.DEBUG || '')),
     SESSION_PREFIX: process.env.SESSION_PREFIX || "JUNE-X~",
     GC_JID: process.env.GC_JID || "FiJ0HpoqKOS0llgeS1uydN",
     DATABASE_URL: process.env.DATABASE_URL || "",

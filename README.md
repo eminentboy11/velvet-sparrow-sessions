@@ -27,6 +27,7 @@ WhatsApp session server for the **June X** fleet — pairing-code + QR login, sh
 | `BOT_REPO` | this repo | Shown in the session-delivery buttons |
 | `WA_CHANNEL` | June X channel | Shown in the session-delivery buttons |
 | `MSG_FOOTER` | `> *JUNE X SESSIONS*` | Footer on delivered messages |
+| `DEBUG` | `false` | `true` = full per-event pairing logs. Default logs ~4 lines per pairing (code issued, complete, sent, errors). |
 | `INTAKE_URL` | *(empty)* | Optional: main June server intake endpoint (`https://…/v1/intake/session`). When set (with `INTAKE_KEY`), fresh sessions are pushed to the fleet vault and the returned handle works on **any** June X pairing site. |
 | `INTAKE_KEY` | *(empty)* | The main server's `JUNE_INTAKE_KEY` (sent as Bearer). |
 | `PORT` | `50900` | Listen port |

@@ -2,7 +2,7 @@ const {
     juneId,
     removeFile
 } = require('../store');
-const { SESSION_PREFIX, GC_JID, BOT_REPO, WA_CHANNEL, MSG_FOOTER, INTAKE_URL, INTAKE_KEY } = require('../config');
+const { SESSION_PREFIX, GC_JID, BOT_REPO, WA_CHANNEL, MSG_FOOTER, INTAKE_URL, INTAKE_KEY, DEBUG } = require('../config');
 const { harvestSnapshot, intakeSession } = require('../store/intake');
 const { isConfigured, saveSession } = require('../store/sessionStore');
 const QRCode = require('qrcode');
@@ -37,7 +37,7 @@ router.get('/session', async (req, res) => {
 
     async function JUNE_QR() {
         const { version } = await fetchLatestBaileysVersion();
-        console.log(version);
+        if (DEBUG) console.log(version);
         const { state, saveCreds } = await useMultiFileAuthState(path.join(sessionDir, id));
         try {
             let bot = juneConnect({
