@@ -19,3 +19,5 @@ services:
         value: https://whatsapp.com/channel/0029VbBzXBN2kNFoxm7LiG3Q
       - key: MSG_FOOTER
         value: "> *JUNE X SESSIONS*"
+      - key: SESSION_ID_LENGTH
+        value: "8"

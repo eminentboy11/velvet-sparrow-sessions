@@ -22,6 +22,7 @@ WhatsApp session server for the **June X** fleet — pairing-code + QR login, sh
 |---|---|---|
 | `DATABASE_URL` | *(empty)* | `postgresql://…` (Neon/Supabase/…) or `mongodb(srv)://…` (Atlas). Empty = inline long session IDs. |
 | `SESSION_PREFIX` | `JUNE-X~` | Session ID prefix |
+| `SESSION_ID_LENGTH` | `8` | Random part length of short IDs (4–20). `6` = 13-char dbapi-style handles |
 | `GC_JID` | `FiJ0HpoqKOS0llgeS1uydN` | WhatsApp group invite code auto-joined on pair. Empty = disabled. |
 | `BOT_REPO` | this repo | Shown in the session-delivery buttons |
 | `WA_CHANNEL` | June X channel | Shown in the session-delivery buttons |

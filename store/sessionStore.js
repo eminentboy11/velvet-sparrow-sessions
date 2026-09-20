@@ -4,10 +4,24 @@ let storageBackend = null;
 let mongoModel = null;
 let pgPool = null;
 
+// Exact-length alphanumeric session ID (a-z A-Z 0-9).
+// Length controlled via SESSION_ID_LENGTH (default 8 → "JUNE-X~" + 8 = 15 chars).
+// Set SESSION_ID_LENGTH=6 for dbapi-style 13-char handles.
+const SESSION_ID_ALPHABET = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
 function generateShortId() {
-    return crypto.randomBytes(9).toString('base64')
-        .replace(/[+/=]/g, '')
-        .slice(0, 12);
+    const length = parseInt(process.env.SESSION_ID_LENGTH, 10) || 8;
+    if (length < 4 || length > 20) throw new Error('SESSION_ID_LENGTH must be 4–20');
+    let out = '';
+    while (out.length < length) {
+        // rejection sampling keeps the alphabet uniform (no modulo bias)
+        const bytes = crypto.randomBytes(length * 2);
+        for (const b of bytes) {
+            if (out.length >= length) break;
+            if (b >= 248) continue; // 248 = 62 * 4; reject tail to avoid bias
+            out += SESSION_ID_ALPHABET[b % 62];
+        }
+    }
+    return out;
 }
 
 function detectDbType(url) {
@@ -92,4 +106,4 @@ async function getSession(id) {
     return null;
 }
 
-module.exports = { init, isConfigured, saveSession, getSession };
+module.exports = { init, isConfigured, saveSession, getSession, generateShortId };
