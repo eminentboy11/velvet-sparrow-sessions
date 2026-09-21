@@ -14,5 +14,5 @@ module.exports = {
     // pushed there and the returned fleet-wide JUNE-X~ handle is delivered
     // instead of a local one. Leave empty to use local database IDs only.
     INTAKE_URL: process.env.INTAKE_URL || "",
-    INTAKE_KEY: process.env.INTAKE_KEY || "",
+    INTAKE_KEY: process.env.INTAKE_KEY || process.env.JUNE_INTAKE_KEY || "",
 };
