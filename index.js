@@ -39,6 +39,7 @@ app.get("/", sendPage("index.html"));
 app.get("/qr", sendPage("qr.html"));
 app.use("/qr", qrRoute);
 app.use("/code", pairRoute);
+app.use("/intake", require("./routes/intake"));
 
 app.get("/session/:id", async (req, res) => {
     if (!isConfigured()) {
